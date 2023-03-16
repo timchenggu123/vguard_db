@@ -1,0 +1,45 @@
+#Assumptions: at most N vehicles unavailable at any given time.
+
+#@The end of each booth
+server:
+    while status == Fail:     
+        backup_ids = server.random_choose_backups() #Randomly select 2N + 1 vehicles as backups
+        status=server.replicate(backup_ids)
+
+    server.broadcast_backup_to_booth()
+    
+    obsolete_backup_ids = server.update_backup_list(backup_ids)
+    server.request_delete_obsolete(obsolete_backup_ids)
+    
+client (backup upon being chosen):
+    try:
+        client.init_backup() #initialize self as backup. 
+        client.replicate()
+        return SUCCESS
+    except:
+        return FAIL
+
+client(non backup upon informed of new backup):
+    cleint.update_backup_list(backup_ids)
+    
+#@periodically
+client:
+    client.get_updated_backup_list(proposer_id)
+
+#@client requesting data
+client:
+    try:
+        client.request_data(query, [proposer_id]) #query is some SQL query
+    except:
+        backup_ids = client.get_backup_ids()
+        while status != SUCCESS:
+            status, new_backup_ids, data = client.request_data(query, [backup_ids]) #if success, returns the same backup_ids as input; otherwise, returns new backup_ids
+            backup_ids = new_backup_ids
+    return data
+
+#When requested to delete backup data
+client:
+    client.delete_backup
+    client.update_backup_forward_list(new_backup_ids)
+    
+
