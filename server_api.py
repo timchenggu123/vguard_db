@@ -1,11 +1,14 @@
 from flask import Flask, jsonify, request, render_template
 import sqlite3
+import sys
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///mydatabase.db'
+
+#Define variable to maintain
+
 
 def get_db_connection():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(f'database.db')
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -41,4 +44,7 @@ def add_user():
     return jsonify({'id': user_id, 'foo': foo, 'bar': bar}), 201
 
 if __name__ == '__main__':
+    args = sys.argv
+    port = args[1]
+    app.config['id'] = port
     app.run(debug=True)
