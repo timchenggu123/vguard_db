@@ -55,7 +55,10 @@ class Server():
         latest_changes = request.json
         table = 'backup_data'
         # clean existing data
-        conn.execute(f"DELETE * FROM {table};")
+        c=conn.cursor()
+        c.execute(f"DELETE * FROM {table};")
+        conn.commit()
+        conn.close()
         # replicate the changes on the non-proposer
         for change in latest_changes:
             #TODO: insert some pre-processing
@@ -76,7 +79,10 @@ class Server():
         TODO: Needs to be tested.
         '''
         table='backup_data'
-        conn.execute(f"DELETE * FROM {table};")
+        c = conn.cursor()
+        c.execute(f"DELETE * FROM {table};")
+        conn.commit()
+        conn.close()
         return True
     
     def on_requested_data(self, query, conn):
