@@ -1,14 +1,26 @@
 from flask import Flask, jsonify, request, render_template
+from server_logic import Server
 import sqlite3
 import sys
+import argparse
 
 app = Flask(__name__)
 
-#Define variable to maintain
+def init_db():
+    dbname = f"database_{app.config['id']}.db"
+    connection = sqlite3.connect(dbname)
 
+    with open('schema.sql') as f:
+        connection.executescript(f.read())
+        
+    cur = connection.cursor()
+
+    connection.commit()
+    connection.close()
 
 def get_db_connection():
-    conn = sqlite3.connect(f'database.db')
+    dbname = f"database_{app.config['id']}.db"
+    conn = sqlite3.connect(dbname)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -43,8 +55,27 @@ def add_user():
     conn.close()
     return jsonify({'id': user_id, 'foo': foo, 'bar': bar}), 201
 
-if __name__ == '__main__':
-    args = sys.argv
-    port = args[1]
-    app.config['id'] = port
+if __name__ == '__main__':        
+
+    # Create the argument parser
+    parser = argparse.ArgumentParser(description='Description of your program')
+
+    # Add arguments
+    parser.add_argument('--is_proposer', type=bool, help='Is this instance proposer or not')
+    parser.add_argument('--id', type=int, help='A unique id for the instance')
+    parser.add_argument('--log_file', type=str, help='Path to the log file')
+    parser.add_argument('--port', type=str, help='Port number')
+    
+
+    # Parse the arguments
+    args = parser.parse_args()
+
+    # Access the values of the arguments
+    app.config['is_proposer'] = args.is_proposer
+    app.config['is_backup'] = not args.is_proposer
+    app.config['id'] = args.id
+    app.config['log_file'] = args.log_file
+    server_logic=Server(app)
+    app.config['logic']=server_logic
+    init_db()
     app.run(debug=True)

@@ -2,89 +2,100 @@ from time import sleep
 import random
 
 class Server():
-    vehicle_id_address = {}
-    def __init__(self, id, proposer=False, proposer_id = 0, log_file=f'./logs/id.txt', config=None):
-        self.is_proposer = proposer
-        self.is_backup = False
-        self.proposer_id= self.proposer_id
-        self.id = InterruptedError
-        self.log_file = log_file
-        self.config=config
-        self.backup_list = {
-            "obsolete":[],
-            "active":[]
+    def __init__(self,app):
+        self.app = app
+        self.backup_list={
+            "active":[],
+            "obsolete":[]
         }
     
-    def run(self):
-        while True:
-            self.check_log_updated()
-            sleep(10)
-            pass
+    @property
+    def is_proposer(self):
+        return self.app.config['is_proposer']
     
-    def check_log_updated(self):
-        # check if log is updated
-        with open(self.log_file, 'r') as f:
-            initial = f.read()
-            while True:
-                current = f.read()
-                if initial != current:
-                    for line in current:
-                        if line not in initial:
-                            data = line
-                    break
+    @property
+    def is_backup(self):
+        return self.app.config['is_backup']
+
+    @property
+    def id(self):
+        return self.app.config['id']
+    
+    @property
+    def log_file(self):
+        return self.app.config['log_file']
+    ##======== helper function==============
+    
+    def _db_insert_data(self,conn,table,data):
+        cursor = conn.cursor()
+        cursor.execute(f"INSERT INTO {table} * VALUES {['?' for i in range(len(data))]}", data)
+        conn.commit()
+        conn.close()
         
-        #log is updated, meaning a booth just ended. We proceed with logic.
-        self.on_end_of_booth(data)
-    
-    def on_end_of_booth(self, data):
-        if self.is_proposer:
-            self.make_backups(data)
-    
+    def _db_read_all(self, conn, table):
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM mytable")
+        # fetch all the rows and store them in a list of dictionaries
+        rows = cursor.fetchall()
+        return rows
+
     ##======== Non proposer logic===========
-    
-    def on_chosen_as_backup(self, data):
+    def on_chosen_as_backup(self, data, conn):
+        
         if self.is_proposer:
-            return False
+            raise TypeError('Proposer cannot be chosen as backup')
         
-        self.is_backup=True
-        return self.make_replicata(self)
+        return self.make_replicata(self, data, conn)
         
-    def make_replica(self,data):
+    def make_replica(self,request,conn):
         '''
         Copy the data into the database
         TODO: Not Implemented
         '''
+        latest_changes = request.json
+        table = 'backup_data'
+        # clean existing data
+        conn.execute(f"DELETE * FROM {table};")
+        # replicate the changes on the non-proposer
+        for change in latest_changes:
+            #TODO: insert some pre-processing
+            self._db_insert_data(conn, table, change)
         return True
     
-    def on_requested_delete_obsolete(self, backup_list):
+    def on_requested_delete_obsolete(self, backup_list, conn):
         '''
         TODO: WIP
         '''
         self.backup_list=backup_list
         self.is_backup=False
-        self.delete_backup()
+        self.delete_backup(conn)
         
-    def delete_backup():
+    def delete_backup(self, conn):
         '''
         delete the backup data
-        TODO: Not Implemented
+        TODO: Needs to be tested.
         '''
+        table='backup_data'
+        conn.execute(f"DELETE * FROM {table};")
         return True
     
-    def on_requested_data(self, query):
+    def on_requested_data(self, query, conn):
         '''
-        When a request is sent to read data from the backup database
+        When a this server receives a request of reading data from its backup database
         TODO: WIPs
         '''
         if self.is_backup:
             #read data
-            raise NotImplementedError()
+            cursor = conn.cursor()
+            cursor.execute(query)
+            return cursor.fetchall()
         else:
-            return self.backup_list()
+            return self.backup_list
     
-    def on_requested_update_backup_lsit(self, backup_list):
+    def on_requested_update_backup_list(self, backup_list):
         '''
         when receiving a request to update backup list
+        TODO: do we really need this?
         '''
         self.backup_list=backup_list
         
@@ -116,7 +127,34 @@ class Server():
         return status, new_backup_ids
             
     ##=======Proposer logic==========
+    def run(self):
+        while True:
+            self.check_log_updated()
+            sleep(10)
+            pass
     
+    def check_log_updated(self):
+        '''
+        TODO: needs to be updated to check for end of a commit booths
+        '''
+        # check if log is updated
+        with open(self.log_file, 'r') as f:
+            initial = f.read()
+            while True:
+                current = f.read()
+                if initial != current:
+                    for line in current:
+                        if line not in initial:
+                            data = line
+                    break
+        
+        #log is updated, meaning a booth just ended. We proceed with logic.
+        self.on_end_of_booth(data)
+    
+    def on_end_of_booth(self, data):
+        if self.is_proposer:
+            self.make_backups(data)
+            
     def make_backups(self,data):
         status = False
         participants = self.get_vehicles_from_log_entry(data)
@@ -142,7 +180,7 @@ class Server():
     def get_vehicles_from_log_entry(self, data):
         '''
         Given the newest line of the log entry, extract the paticipant vehicles ids from it
-        TODO: implement
+         : implement
         '''
         raise NotImplementedError
     
