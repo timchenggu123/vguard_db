@@ -3,8 +3,11 @@ from server_logic import Server
 import sqlite3
 import sys
 import argparse
+import requests
+import json
 
 app = Flask(__name__)
+logic=Server(app)
 
 def init_db():
     dbname = f"database_{app.config['id']}.db"
@@ -31,17 +34,13 @@ def index():
     conn.close()
     return True
 
-@app.route('/data', methods=['GET'])
-def get_data():
+@app.route('/read', methods=['GET'])
+def read_data():
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM data")
-    rows = cursor.fetchall()
+    query =request.json['query']
+    status, res = logic.on_requested_read(query, conn)
     conn.close()
-    data = []
-    for row in rows:
-        data.append({'id': row[0], 'foo': row[1], 'bar': row[2]})
-    return jsonify({'data': data})
+    return jsonify({'status': status, 'data':res})
 
 @app.route('/data', methods=['POST'])
 def add_user():
@@ -75,7 +74,8 @@ if __name__ == '__main__':
     app.config['is_backup'] = not args.is_proposer
     app.config['id'] = args.id
     app.config['log_file'] = args.log_file
-    server_logic=Server(app)
-    app.config['logic']=server_logic
-    init_db()
-    app.run(debug=True)
+    app.config['addess'] = {
+        0:('https://127/0.0.1', '6161')
+    }
+    app.config['port']=args.port
+    app.run(debug=True,port=args.port)

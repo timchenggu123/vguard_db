@@ -1,5 +1,7 @@
 from time import sleep
 import random
+import requests
+import json
 
 class Server():
     def __init__(self,app):
@@ -9,6 +11,10 @@ class Server():
             "obsolete":[]
         }
     
+    @property
+    def proposer_id(self):
+        return self.app.config['proposer_id']
+        
     @property
     def is_proposer(self):
         return self.app.config['is_proposer']
@@ -24,17 +30,21 @@ class Server():
     @property
     def log_file(self):
         return self.app.config['log_file']
+
+    @property
+    def address(self):
+        return self.app.config['address']
+    
     ##======== helper function==============
     
     def _db_insert_data(self,conn,table,data):
         cursor = conn.cursor()
         cursor.execute(f"INSERT INTO {table} * VALUES {['?' for i in range(len(data))]}", data)
         conn.commit()
-        conn.close()
         
     def _db_read_all(self, conn, table):
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM mytable")
+        cursor.execute(f"SELECT * FROM {table}")
         # fetch all the rows and store them in a list of dictionaries
         rows = cursor.fetchall()
         return rows
@@ -85,18 +95,21 @@ class Server():
         conn.close()
         return True
     
-    def on_requested_data(self, query, conn):
+    def on_requested_read(self, query, conn):
         '''
         When a this server receives a request of reading data from its backup database
-        TODO: WIPs
         '''
         if self.is_backup:
             #read data
             cursor = conn.cursor()
             cursor.execute(query)
-            return cursor.fetchall()
+            data = cursor.fetchall()
+            out = []
+            for d in data:
+                out.append([i for i in d])
+            return 'SUCCESS', out
         else:
-            return self.backup_list
+            return 'FAIL', self.backup_list
     
     def on_requested_update_backup_list(self, backup_list):
         '''
@@ -119,7 +132,7 @@ class Server():
                 backup_ids = new_backup_ids
         return data
     
-    def request_data(self, ids):
+    def request_data(self, query, ids):
         '''
         request data from multiple destination ids
         TODO: WIP
@@ -128,7 +141,9 @@ class Server():
         status = False
         for id in ids:
             #request data, or get the new backup_ids from response
-            pass
+            ip,port = self.address[id]
+            response = requests.get(f'http://{ip}:{port}/read', json={'query':query})
+            return response
         
         return status, new_backup_ids
             
