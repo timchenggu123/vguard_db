@@ -6,6 +6,7 @@ import json
 class Server():
     def __init__(self,app):
         self.app = app
+        self.is_backup=False
         self.backup_list={
             "active":[],
             "obsolete":[]
@@ -18,10 +19,6 @@ class Server():
     @property
     def is_proposer(self):
         return self.app.config['is_proposer']
-    
-    @property
-    def is_backup(self):
-        return self.app.config['is_backup']
 
     @property
     def id(self):
@@ -55,14 +52,14 @@ class Server():
         if self.is_proposer:
             raise TypeError('Proposer cannot be chosen as backup')
         
+        self.is_backup=True
         return self.make_replicata(self, data, conn)
         
-    def make_replica(self,request,conn):
+    def make_replica(self,data,conn):
         '''
         Copy the data into the database
-        TODO: Not Implemented
+        TODO: Needs to be tested
         '''
-        latest_changes = request.json
         table = 'backup_data'
         # clean existing data
         c=conn.cursor()
@@ -70,9 +67,9 @@ class Server():
         conn.commit()
         conn.close()
         # replicate the changes on the non-proposer
-        for change in latest_changes:
+        for row in data:
             #TODO: insert some pre-processing
-            self._db_insert_data(conn, table, change)
+            self._db_insert_data(conn, table, row)
         return True
     
     def on_requested_delete_obsolete(self, backup_list, conn):

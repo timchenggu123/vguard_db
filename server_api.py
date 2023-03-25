@@ -42,6 +42,14 @@ def read_data():
     conn.close()
     return jsonify({'status': status, 'data':res})
 
+@app.route('/choose_backup', methods=['POST'])
+def choose_backup():
+    conn = get_db_connection()
+    data = request.json['data']
+    res = logic.on_chosen_as_backup(data, conn)
+    conn.close()
+    return res
+    
 @app.route('/data', methods=['POST'])
 def add_user():
     foo = request.json['foo']
