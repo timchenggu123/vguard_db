@@ -42,6 +42,7 @@ def read_data():
     conn.close()
     return jsonify({'status': status, 'data':res})
 
+
 @app.route('/choose_backup', methods=['POST'])
 def choose_backup():
     conn = get_db_connection()
@@ -49,6 +50,15 @@ def choose_backup():
     res = logic.on_chosen_as_backup(data, conn)
     conn.close()
     return res
+
+@app.route('/end_of_both', methods=['POST'])
+def end_of_booth():
+    conn = get_db_connection()
+    if not app.config['is_proposer']:
+       return jsonify({'status': 'Failed: end point needs to belong to a proposer'})
+    data = request.json
+    res = logic.on_end_of_booth(data, conn)
+    conn.close()
     
 @app.route('/data', methods=['POST'])
 def add_user():
@@ -72,6 +82,7 @@ if __name__ == '__main__':
     parser.add_argument('--id', type=int, help='A unique id for the instance')
     parser.add_argument('--log_file', type=str, help='Path to the log file')
     parser.add_argument('--port', type=str, help='Port number')
+    parser.add_argument('--k_backups', type=int, help='The minimum number of backup dbs in the system')
     
 
     # Parse the arguments
@@ -82,6 +93,7 @@ if __name__ == '__main__':
     app.config['is_backup'] = not args.is_proposer
     app.config['id'] = args.id
     app.config['log_file'] = args.log_file
+    app.config['k_backups'] = args.k_backups
     app.config['addess'] = {
         0:('https://127/0.0.1', '6161')
     }

@@ -32,6 +32,10 @@ class Server():
     def address(self):
         return self.app.config['address']
     
+    @property
+    def k_backups(self):
+        return self.app.config['k_backups']
+    
     ##======== helper function==============
     
     def _db_insert_data(self,conn,table,data):
@@ -44,7 +48,10 @@ class Server():
         cursor.execute(f"SELECT * FROM {table}")
         # fetch all the rows and store them in a list of dictionaries
         rows = cursor.fetchall()
-        return rows
+        out = []
+        for d in data:
+            out.append([i for i in d])
+        return out
 
     ##======== Non proposer logic===========
     def on_chosen_as_backup(self, data, conn):
@@ -169,36 +176,43 @@ class Server():
         #log is updated, meaning a booth just ended. We proceed with logic.
         self.on_end_of_booth(data)
     
-    def on_end_of_booth(self, data):
+    def on_end_of_booth(self, data, conn):
         if self.is_proposer:
-            self.make_backups(data)
+            self.make_backups(data, conn)
             
-    def make_backups(self,data):
+    def make_backups(self,data, conn):
         status = False
-        participants = self.get_vehicles_from_log_entry(data)
+        participants = data['participants']
         while not status:
-            status, chosen = self.choose_random_backups(participants)
+            status, chosen = self.choose_random_backups(participants, data, conn)
+            if not status:
+                continue
             status &= self.broadcast_backups_to_booth(chosen, participants)
             self.update_backup_list(chosen)
-            status &= self.request_delete_obsolete()
+            self.request_delete_obsolete()
 
-    def choose_random_backups(self,participants):
+    def choose_random_backups(self,participants, conn):
+        chosen = random.choices(participants, k=self.k_backups)
+        response = self.request_to_be_backups(chosen, conn)
+        if response.status_code == 200:
+            return True, chosen
+        else:
+            return False, None
         
-        chosen = random.choices(participants, k=self.config['k_backups'])
-        status = self.request_to_be_backups(chosen)
-        return status, chosen
-        
-    def request_to_be_backups(self,chosen):
+    def request_to_be_backups(self,chosen, conn):
         '''
         request the chosen vehicles to be backup
         TODO: implement
         '''
-        return True
+        ip,port = self.address[chosen]
+        data=self._db_read_all(conn, 'backup_data')
+        response = requests.get(f'http://{ip}:{port}/choose_backup', json=data)
+        return response
         
     def get_vehicles_from_log_entry(self, data):
         '''
         Given the newest line of the log entry, extract the paticipant vehicles ids from it
-         : implement
+        TODO: we may not really need this
         '''
         raise NotImplementedError
     
