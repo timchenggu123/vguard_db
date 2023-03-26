@@ -1,5 +1,0 @@
-level=info msg="V-Guard instance starts now"
-level=info msg="CPB | listener is up at 127.0.0.1:10003"
-level=info msg="OPB | listener is up at 127.0.0.1:10001"
-level=info msg="OPA | listener is up at 127.0.0.1:10000"
-level=info msg="CPA | listener is up at 127.0.0.1:10002"
