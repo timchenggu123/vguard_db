@@ -1,13 +1,20 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/gob"
 	"errors"
+	"io/ioutil"
 	"net"
+	"os"
+	"strconv"
 	"sync"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var requestQueue []chan *Proposal
+var sqliteDatabase *sql.DB
 
 var concierge = struct {
 	n [NOP][]*ConnDock // Three phases
@@ -74,8 +81,35 @@ func dialSendBack(m interface{}, encoder *gob.Encoder, phaseNumber int) {
 	}
 }
 
+func createDB(id string) {
+	log.Println("Creating sqlite-database.db...")
+	file, err := os.Create("./database/vehicledb_" + id + ".db") // Create SQLite file
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	file.Close()
+	log.Println("sqlite-database.db created")
+}
+
 func takingInitRoles(proposer ServerId) {
+	createDB(strconv.Itoa(int(ServerId(ServerID))))
+	var err error
+	sqliteDatabase, err = sql.Open("sqlite3", "./database/vehicledb_"+strconv.Itoa(int(ServerId(ServerID)))+".db") // Open the created SQLite File
+	if err != nil {
+		panic(err)
+	}
+	// read the SQL script file
+	b, err := ioutil.ReadFile("../dataset_gps.sql")
+	if err != nil {
+		log.Fatal(err)
+	}
+	// execute the SQL statements
+	_, err = sqliteDatabase.Exec(string(b))
+	if err != nil {
+		log.Fatal(err)
+	}
 	if proposer == ServerId(ServerID) {
+		//defer sqliteDatabase.Close() // Defer Closing the database
 		go runAsProposer(proposer)
 	} else {
 		proposerLookup.Lock()
@@ -83,7 +117,7 @@ func takingInitRoles(proposer ServerId) {
 			proposerLookup.m[Phase(i)] = proposer
 		}
 		proposerLookup.Unlock()
-
+		//defer sqliteDatabase.Close() // Defer Closing the database
 		go runAsValidator()
 	}
 }

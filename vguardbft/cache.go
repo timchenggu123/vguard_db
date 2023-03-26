@@ -8,7 +8,6 @@ ordering and consensus phases.
 */
 
 import (
-	"encoding/hex"
 	"sync"
 )
 
@@ -60,6 +59,59 @@ var vgTxData = struct {
 	boo: make(map[int]Booth),
 }
 
+func insertDataToDB(gps GPSData) {
+	//res, err := sqliteDatabase.Exec("INSERT INTO gps_data VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	// Prepare the INSERT statement
+	_, err := sqliteDatabase.Exec("INSERT INTO gps_data  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+		gps.Timestamp,
+		gps.Latitude,
+		gps.Longitude,
+		gps.Elevation,
+		gps.Accuracy,
+		gps.Bearing,
+		gps.SpeedMetersPerSecond,
+		gps.Satellites,
+		gps.Provider,
+		gps.HDOP,
+		gps.VDOP,
+		gps.PDOP,
+		gps.GeoidHeight,
+		gps.AgeOfDgpsData,
+		gps.DgpsID,
+		gps.Activity,
+		gps.Battery,
+		gps.Annotation,
+		gps.DistanceMeters,
+		gps.ElapsedTimeSeconds)
+	if err != nil {
+		log.Fatal(err)
+	}
+	//defer stmt.Close()
+	// Execute the INSERT statement with the values from the GPSData struct
+	/*_, err = stmt.Exec(
+	gps.Timestamp,
+	gps.Latitude,
+	gps.Longitude,
+	gps.Elevation,
+	gps.Accuracy,
+	gps.Bearing,
+	gps.SpeedMetersPerSecond,
+	gps.Satellites,
+	gps.Provider,
+	gps.HDOP,
+	gps.VDOP,
+	gps.PDOP,
+	gps.GeoidHeight,
+	gps.AgeOfDgpsData,
+	gps.DgpsID,
+	gps.Activity,
+	gps.Battery,
+	gps.Annotation,
+	gps.DistanceMeters,
+	gps.ElapsedTimeSeconds)*/
+
+}
+
 func storeVgTx(consInstID int) {
 	vgTxData.RLock()
 	ordBoo := vgTxData.tx[consInstID]
@@ -72,7 +124,9 @@ func storeVgTx(consInstID int) {
 		log.Infof("ordering booth: %v | len(ordBoo[%v]): %v", key, key, len(chunk))
 		for _, entries := range chunk {
 			for _, e := range entries {
-				log.Infof("ts: %v; tx: %v", e.TimeStamp, hex.EncodeToString(e.Tx))
+				//log.Infof("ts: %v; tx: %v", e.TimeStamp, hex.EncodeToString(e.Tx))
+				log.Infof("ts: %v; tx: %v", e.TimeStamp, e.Tx)
+				insertDataToDB(e.Tx)
 			}
 		}
 	}
