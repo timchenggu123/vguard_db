@@ -40,7 +40,7 @@ class Server():
     
     def _db_insert_data(self,conn,table,data):
         cursor = conn.cursor()
-        cursor.execute(f"INSERT INTO {table} * VALUES {['?' for i in range(len(data))]}", data)
+        cursor.execute(f"INSERT INTO {table} VALUES ({','.join(['?' for i in range(len(data))])})", data)
         conn.commit()
         
     def _db_read_all(self, conn, table):
@@ -49,7 +49,7 @@ class Server():
         # fetch all the rows and store them in a list of dictionaries
         rows = cursor.fetchall()
         out = []
-        for d in data:
+        for d in rows:
             out.append([i for i in d])
         return out
 
@@ -60,7 +60,7 @@ class Server():
             raise TypeError('Proposer cannot be chosen as backup')
         
         self.is_backup=True
-        return self.make_replicata(self, data, conn)
+        return self.make_replica(data, conn)
         
     def make_replica(self,data,conn):
         '''
@@ -70,14 +70,14 @@ class Server():
         table = 'backup_data'
         # clean existing data
         c=conn.cursor()
-        c.execute(f"DELETE * FROM {table};")
+        c.execute(f"DELETE FROM {table};")
         conn.commit()
-        conn.close()
         # replicate the changes on the non-proposer
         for row in data:
             #TODO: insert some pre-processing
             self._db_insert_data(conn, table, row)
         return True
+    
     
     def on_requested_delete_obsolete(self, backup_list, conn):
         '''
@@ -94,9 +94,8 @@ class Server():
         '''
         table='backup_data'
         c = conn.cursor()
-        c.execute(f"DELETE * FROM {table};")
+        c.execute(f"DELETE FROM {table};")
         conn.commit()
-        conn.close()
         return True
     
     def on_requested_read(self, query, conn):
@@ -146,7 +145,7 @@ class Server():
         for id in ids:
             #request data, or get the new backup_ids from response
             ip,port = self.address[id]
-            response = requests.get(f'http://{ip}:{port}/read', json={'query':query})
+            response = requests.get(f'{ip}:{port}/read', json={'query':query})
             return response
         
         return status, new_backup_ids
@@ -184,21 +183,21 @@ class Server():
         status = False
         participants = data['participants']
         while not status:
-            status, chosen = self.choose_random_backups(participants, data, conn)
+            status, chosen = self.choose_random_backups(participants, conn)
             if not status:
                 continue
-            status &= self.broadcast_backups_to_booth(chosen, participants)
+            status = self.broadcast_backups_to_booth(chosen, participants)
             self.update_backup_list(chosen)
             self.request_delete_obsolete()
 
     def choose_random_backups(self,participants, conn):
         chosen = random.choices(participants, k=self.k_backups)
-        response = self.request_to_be_backups(chosen, conn)
-        if response.status_code == 200:
-            return True, chosen
-        else:
-            return False, None
-        
+        for c in chosen:
+            response = self.request_to_be_backups(c, conn)
+            if response.status_code != 200:
+                return False, None
+        return True, chosen
+    
     def request_to_be_backups(self,chosen, conn):
         '''
         request the chosen vehicles to be backup
@@ -206,7 +205,7 @@ class Server():
         '''
         ip,port = self.address[chosen]
         data=self._db_read_all(conn, 'backup_data')
-        response = requests.post(f'http://{ip}:{port}/choose_backup', json=data)
+        response = requests.post(f'{ip}:{port}/choose_backup', json=data)
         return response
         
     def get_vehicles_from_log_entry(self, data):
@@ -223,13 +222,14 @@ class Server():
         '''
         for i in participants:
             ip,port = self.address[i]
-            response = requests.get(f'http://{ip}:{port}/update_backup_list', json=self.backup_list)
-            return response
+            response = requests.post(f'{ip}:{port}/update_backup_list', json=chosen)
+            if response.status_code!=200:
+                return False
         return True
     
     def update_backup_list(self, chosen):
         old_active = self.backup_list['active']
-        self.backup_list['obsolete'].append(old_active)
+        self.backup_list['obsolete']+=old_active
         self.backup_list['obsolete'] = [x for x in self.backup_list['obsolete'] if x not in chosen]
                 
         self.backup_list['active'] = chosen
@@ -239,13 +239,12 @@ class Server():
         request the obsolete backups to delete their data
         TODO:implement
         '''
-        for i in self.backup_list['obsolete']:
+        obsoletes = [i for i in self.backup_list['obsolete']]
+        for i in obsoletes:
             ip,port = self.address[i]
-            response = requests.get(f'http://{ip}:{port}/delete_obsolete', json=self.backup_list)
+            response = requests.post(f'{ip}:{port}/delete_obsolete', json=self.backup_list)
             if response.status_code == 200:
                 self.backup_list['obsolete'].remove(i)
-            return response 
-
         return True
         
     def get_vehicle_address(self, id):

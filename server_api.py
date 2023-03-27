@@ -12,7 +12,8 @@ app.config['address'] = {
     2:('http://127.0.0.1', '9862'),
     3:('http://127.0.0.1', '9863'),
     4:('http://127.0.0.1', '9864'),
-    5:('http://127.0.0.1', '9865')
+    5:('http://127.0.0.1', '9865'),
+    6:('http://127.0.0.1', '9866') 
 }
 
 def init_db():
@@ -90,9 +91,11 @@ def update_backup_list():
 
 @app.route('/delete_obsolete', methods=['POST'])
 def delete_obsolete():
-    backup_list = request.json['data']
+    backup_list = request.json
     conn = get_db_connection()
     logic.on_requested_delete_obsolete(backup_list=backup_list, conn=conn)
+    conn.close()
+    return '', 200
 
 @app.route('/data', methods=['POST'])
 def add_user():
@@ -132,4 +135,5 @@ if __name__ == '__main__':
     
     init_db()
     insert_dummy_data()
+
     app.run(debug=True,port=args.port)
