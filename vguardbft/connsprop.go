@@ -22,7 +22,8 @@ func runAsProposer(proposerId ServerId) {
 
 	prepareBooths(NumOfConn, BoothSize)
 
-	txGenerator(MsgSize)
+	//txGenerator(MsgSize)
+	dataTxGenerator(MsgSize)
 
 	for i := 0; i < NumOfValidators; i++ {
 		go startOrderingPhaseA(i)

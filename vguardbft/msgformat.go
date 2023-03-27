@@ -5,14 +5,39 @@ package main
 // another server. Thus, all feilds must be capitilized.
 //
 
+type GPSData struct {
+	Timestamp            string `csv:"timestamp"`
+	Latitude             string `csv:"latitude"`
+	Longitude            string `csv:"longitude"`
+	Elevation            string `csv:"elevation"`
+	Accuracy             string `csv:"accuracy"`
+	Bearing              string `csv:"bearing"`
+	SpeedMetersPerSecond string `csv:"speed_meters_per_second"`
+	Satellites           string `csv:"satellites"`
+	Provider             string `csv:"provider"`
+	HDOP                 string `csv:"hdop"`
+	VDOP                 string `csv:"vdop"`
+	PDOP                 string `csv:"pdop"`
+	GeoidHeight          string `csv:"geoidheight"`
+	AgeOfDgpsData        string `csv:"ageofdgpsdata"`
+	DgpsID               string `csv:"dgpsid"`
+	Activity             string `csv:"activity"`
+	Battery              string `csv:"battery"`
+	Annotation           string `csv:"annotation"`
+	DistanceMeters       string `csv:"distance_meters"`
+	ElapsedTimeSeconds   string `csv:"elapsed_time_seconds"`
+}
+
 type Proposal struct {
 	Timestamp   int64
-	Transaction []byte
+	Transaction GPSData
+	//Transaction []byte
 }
 
 type Entry struct {
 	TimeStamp int64
-	Tx        []byte
+	Tx        GPSData
+	//Tx        []byte
 }
 
 type ProposerOPAEntry struct {
