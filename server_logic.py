@@ -206,7 +206,7 @@ class Server():
         '''
         ip,port = self.address[chosen]
         data=self._db_read_all(conn, 'backup_data')
-        response = requests.get(f'http://{ip}:{port}/choose_backup', json=data)
+        response = requests.post(f'http://{ip}:{port}/choose_backup', json=data)
         return response
         
     def get_vehicles_from_log_entry(self, data):
@@ -221,6 +221,10 @@ class Server():
         Inform all of the participant of the booth which are the backup
         TODO: implement
         '''
+        for i in participants:
+            ip,port = self.address[i]
+            response = requests.get(f'http://{ip}:{port}/update_backup_list', json=self.backup_list)
+            return response
         return True
     
     def update_backup_list(self, chosen):
@@ -235,6 +239,13 @@ class Server():
         request the obsolete backups to delete their data
         TODO:implement
         '''
+        for i in self.backup_list['obsolete']:
+            ip,port = self.address[i]
+            response = requests.get(f'http://{ip}:{port}/delete_obsolete', json=self.backup_list)
+            if response.status_code == 200:
+                self.backup_list['obsolete'].remove(i)
+            return response 
+
         return True
         
     def get_vehicle_address(self, id):

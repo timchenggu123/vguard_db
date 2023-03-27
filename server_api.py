@@ -51,7 +51,7 @@ def choose_backup():
     conn.close()
     return res
 
-@app.route('/end_of_both', methods=['POST'])
+@app.route('/end_of_both', methods=['Get'])
 def end_of_booth():
     conn = get_db_connection()
     if not app.config['is_proposer']:
@@ -60,6 +60,17 @@ def end_of_booth():
     res = logic.on_end_of_booth(data, conn)
     conn.close()
     
+@app.route('/update_backup_list', methods=['POST'])
+def update_backup_list():
+    chosen_list = request.data['data']
+    logic.update_backup_list(chosen_list)
+
+@app.route('/delete_obsolete', method=['POST'])
+def delete_obsolete():
+    backup_list = request.data['data']
+    conn = get_db_connection()
+    logic.on_requested_delete_obsolete(backup_list=backup_list, conn=conn)
+
 @app.route('/data', methods=['POST'])
 def add_user():
     foo = request.json['foo']
