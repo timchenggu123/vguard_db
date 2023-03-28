@@ -11,7 +11,8 @@ class Server():
             "active":[],
             "obsolete":[]
         }
-    
+        self.offline=False
+         
     @property
     def proposer_id(self):
         return self.app.config['proposer_id']
@@ -102,7 +103,7 @@ class Server():
         '''
         When a this server receives a request of reading data from its backup database
         '''
-        if self.is_backup:
+        if self.is_backup or self.is_proposer:
             #read data
             cursor = conn.cursor()
             cursor.execute(query)
@@ -110,9 +111,9 @@ class Server():
             out = []
             for d in data:
                 out.append([i for i in d])
-            return 'SUCCESS', out
+            return out, None
         else:
-            return 'FAIL', self.backup_list
+            return None, self.backup_list['active']
     
     def on_requested_update_backup_list(self, backup_list):
         '''
@@ -124,15 +125,22 @@ class Server():
     def read_data(self, query):
         '''
         read data
-        TODO: Not Implemented
         '''
-        try:
-            self.request_data(query, [self.proposer_id]) #query is some SQL query
-        except:
-            backup_ids = self.backup_list['active']
-            while status != 'SUCCESS':
-                status, new_backup_ids, data = self.request_data(query, [backup_ids]) #if success, returns the same backup_ids as input; otherwise, returns new backup_ids
-                backup_ids = new_backup_ids
+        response = self.request_data(query, [self.proposer_id]) #query is some SQL query
+        if response.status_code == 200:
+            data = response.json()['data']
+            if data is not None:
+                return data
+            
+        backup_ids = self.backup_list['active']    
+        while True:
+            response = self.request_data(query, backup_ids) #if success, returns the same backup_ids as input; otherwise, returns new backup_ids
+            if response.status_code == 200:
+                if response.json()['data'] is not None:
+                    data=response.json()['data']
+                    break
+                backup_ids = response.json()['new_backup_ids']
+                
         return data
     
     def request_data(self, query, ids):
@@ -140,15 +148,15 @@ class Server():
         request data from multiple destination ids
         TODO: WIP
         '''
-        new_backup_ids = None
         status = False
         for id in ids:
             #request data, or get the new backup_ids from response
             ip,port = self.address[id]
             response = requests.get(f'{ip}:{port}/read', json={'query':query})
-            return response
-        
-        return status, new_backup_ids
+            status = response.status_code == 200
+            if status:
+                return response
+        return response
             
     ##=======Proposer logic==========
     

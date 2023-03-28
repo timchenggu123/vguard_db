@@ -32,6 +32,10 @@ def init_db():
         os.remove(dbname)
         init_db()
 
+def check_offline():
+    if logic.offline:
+        raise TypeError()
+    
 def get_db_connection():
     dbname = f"database_{app.config['id']}.db"
     conn = sqlite3.connect(dbname)
@@ -46,24 +50,19 @@ def insert_dummy_data():
     conn.commit()
     conn.close()
     
-@app.route('/')
-def index():
-    conn = get_db_connection()
-    posts = conn.execute('SELECT * FROM posts').fetchall()
-    conn.close()
-    return True
-
 @app.route('/read', methods=['GET'])
 def read_data():
+    check_offline()
     conn = get_db_connection()
     query =request.json['query']
-    status, res = logic.on_requested_read(query, conn)
+    data, new_backup_ids = logic.on_requested_read(query, conn)
     conn.close()
-    return jsonify({'status': status, 'data':res})
+    return jsonify({'new_backup_ids': new_backup_ids, 'data': data}), 200
 
 
 @app.route('/choose_backup', methods=['POST'])
 def choose_backup():
+    check_offline()
     conn = get_db_connection()
     data = request.json
     res = logic.on_chosen_as_backup(data, conn)
@@ -75,6 +74,7 @@ def choose_backup():
 
 @app.route('/end_of_booth', methods=['Get'])
 def end_of_booth():
+    check_offline()
     conn = get_db_connection()
     if not app.config['is_proposer']:
        return jsonify({'status': 'Failed: end point needs to belong to a proposer'})
@@ -85,29 +85,48 @@ def end_of_booth():
     
 @app.route('/update_backup_list', methods=['POST'])
 def update_backup_list():
+    check_offline()
     chosen_list = request.json
     logic.update_backup_list(chosen_list)
     return '',200
 
 @app.route('/delete_obsolete', methods=['POST'])
 def delete_obsolete():
+    check_offline()
     backup_list = request.json
     conn = get_db_connection()
     logic.on_requested_delete_obsolete(backup_list=backup_list, conn=conn)
     conn.close()
     return '', 200
 
-@app.route('/data', methods=['POST'])
-def add_user():
-    foo = request.json['foo']
-    bar = request.json['bar']
+########Debugging endpoints###############
+@app.route('/')
+def index():
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO data (foo, bar) VALUES (?, ?)", (foo, bar))
-    conn.commit()
-    user_id = cursor.lastrowid
+    data = logic._db_read_all(conn, 'backup_data')
     conn.close()
-    return jsonify({'id': user_id, 'foo': foo, 'bar': bar}), 201
+    return jsonify({"data":data}),200
+
+@app.route('/trigger_read')
+def trigger_read():
+    query = 'select * from backup_data'
+    data =logic.read_data(query)
+    return jsonify({'data':data}), 200
+
+@app.route('/trigger_insert_dummy')
+def trigger_insert_dummy():
+    insert_dummy_data()
+    return jsonify({}), 200
+
+@app.route('/set_offline')
+def set_offline():
+    logic.offline=True
+    return jsonify({}), 200
+    
+@app.route('/set_online')
+def set_online():
+    logic.offline=False
+    return jsonify({}), 200
 
 if __name__ == '__main__':        
 
@@ -120,7 +139,8 @@ if __name__ == '__main__':
     parser.add_argument('--log_file', type=str, help='Path to the log file')
     parser.add_argument('--port', type=str, help='Port number')
     parser.add_argument('--k_backups', type=int, help='The minimum number of backup dbs in the system')
-    
+    parser.add_argument('--proposer_id', type=int, help='The id of the proposer', default=0) 
+    parser.add_argument('--debug', type=bool, help='Set true to activate debug mode', default = True)
 
     # Parse the arguments
     args = parser.parse_args()
@@ -132,8 +152,10 @@ if __name__ == '__main__':
     app.config['log_file'] = args.log_file
     app.config['k_backups'] = args.k_backups
     app.config['port']=args.port
+    app.config['proposer_id']=args.proposer_id
+    app.config['debug']=args.debug
     
     init_db()
-    insert_dummy_data()
+    # insert_dummy_data()
 
     app.run(debug=True,port=args.port)
