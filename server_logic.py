@@ -151,29 +151,6 @@ class Server():
         return status, new_backup_ids
             
     ##=======Proposer logic==========
-    def run(self):
-        while True:
-            self.check_log_updated()
-            sleep(10)
-            pass
-    
-    def check_log_updated(self):
-        '''
-        TODO: needs to be updated to check for end of a commit booths
-        '''
-        # check if log is updated
-        with open(self.log_file, 'r') as f:
-            initial = f.read()
-            while True:
-                current = f.read()
-                if initial != current:
-                    for line in current:
-                        if line not in initial:
-                            data = line
-                    break
-        
-        #log is updated, meaning a booth just ended. We proceed with logic.
-        self.on_end_of_booth(data)
     
     def on_end_of_booth(self, data, conn):
         if self.is_proposer:
