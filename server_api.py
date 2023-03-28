@@ -24,8 +24,6 @@ def init_db():
         with open('schema.sql') as f:
             connection.executescript(f.read())
             
-        cur = connection.cursor()
-
         connection.commit()
         connection.close()
     except:
@@ -79,7 +77,7 @@ def end_of_booth():
     if not app.config['is_proposer']:
        return jsonify({'status': 'Failed: end point needs to belong to a proposer'})
     data = request.json
-    res = logic.on_end_of_booth(data, conn)
+    logic.on_end_of_booth(data, conn)
     conn.close()
     return '', 200
     
