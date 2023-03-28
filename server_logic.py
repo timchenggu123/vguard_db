@@ -66,7 +66,6 @@ class Server():
     def make_replica(self,data,conn):
         '''
         Copy the data into the database
-        TODO: Needs to be tested
         '''
         table = 'backup_data'
         # clean existing data
@@ -75,15 +74,11 @@ class Server():
         conn.commit()
         # replicate the changes on the non-proposer
         for row in data:
-            #TODO: insert some pre-processing
             self._db_insert_data(conn, table, row)
         return True
     
     
     def on_requested_delete_obsolete(self, backup_list, conn):
-        '''
-        TODO: WIP
-        '''
         self.backup_list=backup_list
         self.is_backup=False
         self.delete_backup(conn)
@@ -91,7 +86,6 @@ class Server():
     def delete_backup(self, conn):
         '''
         delete the backup data
-        TODO: Needs to be tested.
         '''
         table='backup_data'
         c = conn.cursor()
@@ -118,7 +112,6 @@ class Server():
     def on_requested_update_backup_list(self, backup_list):
         '''
         when receiving a request to update backup list
-        TODO: do we really need this?
         '''
         self.backup_list=backup_list
         
@@ -146,7 +139,6 @@ class Server():
     def request_data(self, query, ids):
         '''
         request data from multiple destination ids
-        TODO: WIP
         '''
         status = False
         for id in ids:
@@ -186,24 +178,16 @@ class Server():
     def request_to_be_backups(self,chosen, conn):
         '''
         request the chosen vehicles to be backup
-        TODO: implement
+
         '''
         ip,port = self.address[chosen]
         data=self._db_read_all(conn, 'backup_data')
         response = requests.post(f'{ip}:{port}/choose_backup', json=data)
         return response
-        
-    def get_vehicles_from_log_entry(self, data):
-        '''
-        Given the newest line of the log entry, extract the paticipant vehicles ids from it
-        TODO: we may not really need this
-        '''
-        raise NotImplementedError
     
     def broadcast_backups_to_booth(self, chosen, participants):
         '''
         Inform all of the participant of the booth which are the backup
-        TODO: implement
         '''
         for i in participants:
             ip,port = self.address[i]
@@ -222,7 +206,6 @@ class Server():
     def request_delete_obsolete(self):
         '''
         request the obsolete backups to delete their data
-        TODO:implement
         '''
         obsoletes = [i for i in self.backup_list['obsolete']]
         for i in obsoletes:
