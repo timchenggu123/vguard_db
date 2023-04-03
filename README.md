@@ -33,7 +33,7 @@ The figure below shows an overall Work flow overview for VGuard_DB, where A_prop
 
 ![High Level Architecture](img/worflow.png)
 
-##Quick Start
+## Quick Start
 
 **Note:** VGuardDB is implemented via a PythonFlask API. It can be run independently from VGuard, and all of its actions from data replication to read can be trigger via simple ResfulAPI calls. To run VGuard alongside VGuardDB, consult VGuard quick start guide.
 
