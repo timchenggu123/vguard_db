@@ -140,7 +140,7 @@ if __name__ == '__main__':
     parser.add_argument('--k_backups', type=int, help='The minimum number of backup dbs in the system')
     parser.add_argument('--proposer_id', type=int, help='The id of the proposer', default=0) 
     parser.add_argument('--debug', type=bool, help='Set true to activate debug mode', default = True)
-    parser.add_argument('--address_file', type=str, help='Path to the address file', default = 'address.txt')
+    parser.add_argument('--address_file', type=str, help='Path to the address file', default = 'address.json')
 
     # Parse the arguments
     args = parser.parse_args()
