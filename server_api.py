@@ -21,7 +21,7 @@ def init_db():
     try:
         connection = sqlite3.connect(dbname)
 
-        with open('schema.sql') as f:
+        with open('dataset_gps.sql') as f:
             connection.executescript(f.read())
             
         connection.commit()
