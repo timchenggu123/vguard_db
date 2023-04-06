@@ -1,4 +1,5 @@
 CREATE TABLE IF NOT EXISTS gps_data (
+    boothid TEXT,
     timestamp TEXT,
     latitude TEXT,
     longitude TEXT,
