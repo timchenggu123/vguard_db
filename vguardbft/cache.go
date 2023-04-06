@@ -8,7 +8,11 @@ ordering and consensus phases.
 */
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
 	"sync"
+	"time"
 )
 
 // ordSnapshot stores consensus information for each block in the ordering phase
@@ -59,10 +63,11 @@ var vgTxData = struct {
 	boo: make(map[int]Booth),
 }
 
-func insertDataToDB(gps GPSData) {
+func insertDataToDB(cmtBoothID int, gps GPSData) {
 	//res, err := sqliteDatabase.Exec("INSERT INTO gps_data VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	// Prepare the INSERT statement
-	_, err := sqliteDatabase.Exec("INSERT INTO gps_data  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+	_, err := sqliteDatabase.Exec("INSERT INTO gps_data  VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+		cmtBoothID,
 		gps.Timestamp,
 		gps.Latitude,
 		gps.Longitude,
@@ -86,30 +91,7 @@ func insertDataToDB(gps GPSData) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//defer stmt.Close()
-	// Execute the INSERT statement with the values from the GPSData struct
-	/*_, err = stmt.Exec(
-	gps.Timestamp,
-	gps.Latitude,
-	gps.Longitude,
-	gps.Elevation,
-	gps.Accuracy,
-	gps.Bearing,
-	gps.SpeedMetersPerSecond,
-	gps.Satellites,
-	gps.Provider,
-	gps.HDOP,
-	gps.VDOP,
-	gps.PDOP,
-	gps.GeoidHeight,
-	gps.AgeOfDgpsData,
-	gps.DgpsID,
-	gps.Activity,
-	gps.Battery,
-	gps.Annotation,
-	gps.DistanceMeters,
-	gps.ElapsedTimeSeconds)*/
-
+	time.Sleep(1 * time.Second)
 }
 
 func storeVgTx(consInstID int) {
@@ -126,7 +108,37 @@ func storeVgTx(consInstID int) {
 			for _, e := range entries {
 				//log.Infof("ts: %v; tx: %v", e.TimeStamp, hex.EncodeToString(e.Tx))
 				log.Infof("ts: %v; tx: %v", e.TimeStamp, e.Tx)
-				insertDataToDB(e.Tx)
+				insertDataToDB(cmtBoo.ID, e.Tx)
+
+				// Create the JSON payload
+				participants := []int{}
+				participants = cmtBoo.Indices[:len(cmtBoo.Indices)-1]
+				payload := map[string]interface{}{
+					//"participants": []int{4, 5, 6},
+					"participants": participants,
+				}
+
+				// Marshal payload to JSON
+				jsonPayload, err := json.Marshal(payload)
+				if err != nil {
+					panic(err)
+				}
+
+				// Send the HTTP request
+				url := "http://127.0.0.1:9860/end_of_booth"
+				//resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
+				resp, err := http.NewRequest("GET", url, bytes.NewBuffer(jsonPayload))
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				defer resp.Body.Close()
+
+				// Check response status code
+				//if resp.StatusCode != http.StatusOK {
+				//	log.Fatalf("Unexpected status code: %d", resp.StatusCode)
+				//}
+
 			}
 		}
 	}
