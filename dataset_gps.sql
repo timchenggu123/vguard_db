@@ -22,5 +22,8 @@ CREATE TABLE IF NOT EXISTS gps_data (
     elapsed_time_seconds TEXT
 );
 
-
-
+/*CREATE TABLE IF NOT EXISTS backup_data (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    foo TEXT NOT NULL,
+    bar TEXT NOT NULL
+);*/
