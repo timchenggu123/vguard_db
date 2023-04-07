@@ -67,7 +67,7 @@ class Server():
         '''
         Copy the data into the database
         '''
-        table = 'backup_data'
+        table = 'gps_data'
         # clean existing data
         c=conn.cursor()
         c.execute(f"DELETE FROM {table};")
@@ -87,7 +87,7 @@ class Server():
         '''
         delete the backup data
         '''
-        table='backup_data'
+        table='gps_data'
         c = conn.cursor()
         c.execute(f"DELETE FROM {table};")
         conn.commit()
@@ -181,7 +181,7 @@ class Server():
 
         '''
         ip,port = self.address[chosen]
-        data=self._db_read_all(conn, 'backup_data')
+        data=self._db_read_all(conn, 'gps_data')
         response = requests.post(f'{ip}:{port}/choose_backup', json=data)
         return response
     
@@ -212,7 +212,11 @@ class Server():
             ip,port = self.address[i]
             response = requests.post(f'{ip}:{port}/delete_obsolete', json=self.backup_list)
             if response.status_code == 200:
-                self.backup_list['obsolete'].remove(i)
+                try:
+                    self.backup_list['obsolete'].remove(i)
+                except ValueError:
+                    print("The requested obsolete is not in the backup list")
+                    continue
         return True
         
     def get_vehicle_address(self, id):

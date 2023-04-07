@@ -101,13 +101,13 @@ def delete_obsolete():
 @app.route('/')
 def index():
     conn = get_db_connection()
-    data = logic._db_read_all(conn, 'backup_data')
+    data = logic._db_read_all(conn, 'gps_data')
     conn.close()
     return jsonify({"data":data}),200
 
 @app.route('/trigger_read')
 def trigger_read():
-    query = 'select * from backup_data'
+    query = 'select * from gps_data'
     data =logic.read_data(query)
     return jsonify({'data':data}), 200
 
