@@ -10,11 +10,14 @@ import (
 	"strconv"
 	"sync"
 
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 var requestQueue []chan *Proposal
-var sqliteDatabase *sql.DB
+
+// var sqliteDatabase *sql.DB
+var mysqlDatabase *sql.DB
 
 var concierge = struct {
 	n [NOP][]*ConnDock // Three phases
@@ -94,17 +97,33 @@ func createDB(id string) {
 func takingInitRoles(proposer ServerId) {
 	createDB(strconv.Itoa(int(ServerId(ServerID))))
 	var err error
-	sqliteDatabase, err = sql.Open("sqlite3", "../database_"+strconv.Itoa(int(ServerId(ServerID)))+".db") // Open the created SQLite File
+	//sqliteDatabase, err = sql.Open("sqlite3", "../database_"+strconv.Itoa(int(ServerId(ServerID)))+".db") // Open the created SQLite File
+	dbName := "database_" + strconv.Itoa(int(ServerId(ServerID)))
+	mysqlDatabase, err := sql.Open("mysql", "root:123@tcp(127.0.0.1:3306)/")
 	if err != nil {
 		panic(err)
 	}
+	defer mysqlDatabase.Close()
+
+	// Create a new database for the current node if it does not exist
+	_, err = mysqlDatabase.Exec("CREATE DATABASE IF NOT EXISTS " + dbName)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	// switch to the database
+	_, err = mysqlDatabase.Exec("USE " + dbName)
+	if err != nil {
+		panic(err.Error())
+	}
+
 	// read the SQL script file
 	b, err := ioutil.ReadFile("../dataset_gps.sql")
 	if err != nil {
 		log.Fatal(err)
 	}
 	// execute the SQL statements
-	_, err = sqliteDatabase.Exec(string(b))
+	_, err = mysqlDatabase.Exec(string(b))
 	if err != nil {
 		log.Fatal(err)
 	}

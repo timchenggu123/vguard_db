@@ -9,10 +9,11 @@ ordering and consensus phases.
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"sync"
-	"time"
 )
 
 // ordSnapshot stores consensus information for each block in the ordering phase
@@ -65,8 +66,10 @@ var vgTxData = struct {
 
 func insertDataToDB(cmtBoothID int, gps GPSData) {
 	//res, err := sqliteDatabase.Exec("INSERT INTO gps_data VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	dbName := "database_" + strconv.Itoa(int(ServerId(ServerID)))
+	mysqlDatabase, err := sql.Open("mysql", "root:123@tcp(127.0.0.1:3306)/"+dbName)
 	// Prepare the INSERT statement
-	_, err := sqliteDatabase.Exec("INSERT INTO gps_data  VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+	_, err = mysqlDatabase.Exec("INSERT INTO gps_data  VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
 		cmtBoothID,
 		gps.Timestamp,
 		gps.Latitude,
@@ -91,7 +94,8 @@ func insertDataToDB(cmtBoothID int, gps GPSData) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	time.Sleep(1 * time.Second)
+	mysqlDatabase.Close()
+	//time.Sleep(1 * time.Second)
 }
 
 func storeVgTx(consInstID int) {
@@ -108,31 +112,44 @@ func storeVgTx(consInstID int) {
 			for _, e := range entries {
 				//log.Infof("ts: %v; tx: %v", e.TimeStamp, hex.EncodeToString(e.Tx))
 				log.Infof("ts: %v; tx: %v", e.TimeStamp, e.Tx)
-				insertDataToDB(cmtBoo.ID, e.Tx)
 
-				// Create the JSON payload
-				participants := []int{}
-				participants = cmtBoo.Indices[:len(cmtBoo.Indices)-1]
-				payload := map[string]interface{}{
-					//"participants": []int{4, 5, 6},
-					"participants": participants,
+				if 0 == ServerId(ServerID) {
+					//print("Proposer!!")
+					insertDataToDB(cmtBoo.ID, e.Tx)
+					// Create the JSON payload
+					participants := []int{}
+					participants = cmtBoo.Indices[:len(cmtBoo.Indices)-1]
+					payload := map[string]interface{}{
+						//"participants": []int{4, 5, 6},
+						"participants": participants,
+					}
+
+					// Marshal payload to JSON
+					jsonPayload, err := json.Marshal(payload)
+					if err != nil {
+						panic(err)
+					}
+
+					//res, err := http.Get("http://127.0.0.1:9860/")
+					//print(res)
+
+					// Send the HTTP request
+					url := "http://127.0.0.1:9860/end_of_booth"
+					req, err := http.NewRequest("GET", url, bytes.NewBuffer(jsonPayload))
+					if err != nil {
+						log.Fatal(err)
+					}
+					req.Header.Set("Content-type", "application/json")
+					resp, err := http.DefaultClient.Do(req)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+					defer resp.Body.Close()
 				}
-
-				// Marshal payload to JSON
-				jsonPayload, err := json.Marshal(payload)
-				if err != nil {
-					panic(err)
-				}
-
-				// Send the HTTP request
-				url := "http://127.0.0.1:9860/end_of_booth"
-				//resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonPayload))
-				resp, err := http.NewRequest("GET", url, bytes.NewBuffer(jsonPayload))
-				if err != nil {
-					log.Fatal(err)
-				}
-
-				defer resp.Body.Close()
+				//else {
+				//	print("Validator!!")
+				//}
 
 				// Check response status code
 				//if resp.StatusCode != http.StatusOK {
