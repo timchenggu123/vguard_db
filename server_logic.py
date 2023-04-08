@@ -1,5 +1,7 @@
 from time import sleep
 import random
+
+import mysql.connector
 import requests
 import json
 
@@ -41,11 +43,24 @@ class Server():
     
     def _db_insert_data(self,conn,table,data):
         cursor = conn.cursor()
-        cursor.execute(f"INSERT INTO {table} VALUES ({','.join(['?' for i in range(len(data))])})", data)
-        conn.commit()
+        #cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED")
+        try:
+            cursor.execute(f"INSERT IGNORE INTO {table} VALUES ({','.join(['%s' for i in range(len(data))])})", data)
+            conn.commit()
+
+        except mysql.connector.errors.DatabaseError as e:
+            # handle the deadlock error
+            if 'Deadlock found' in str(e):
+                print("Deadlock found when trying to get lock; retrying transaction")
+                conn.rollback()
+                # retry the transaction or take other corrective actions
+            else:
+                raise e
+
         
     def _db_read_all(self, conn, table):
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)
+        #cursor.execute("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED")
         cursor.execute(f"SELECT * FROM {table}")
         # fetch all the rows and store them in a list of dictionaries
         rows = cursor.fetchall()

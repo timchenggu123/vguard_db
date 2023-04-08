@@ -69,7 +69,7 @@ func insertDataToDB(cmtBoothID int, gps GPSData) {
 	dbName := "database_" + strconv.Itoa(int(ServerId(ServerID)))
 	mysqlDatabase, err := sql.Open("mysql", "root:123@tcp(127.0.0.1:3306)/"+dbName)
 	// Prepare the INSERT statement
-	_, err = mysqlDatabase.Exec("INSERT INTO gps_data  VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+	_, err = mysqlDatabase.Exec("INSERT IGNORE INTO gps_data  VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
 		cmtBoothID,
 		gps.Timestamp,
 		gps.Latitude,

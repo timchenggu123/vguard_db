@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS gps_data (
-    boothid TEXT,
-    timestamp TEXT,
+    boothid VARCHAR(30),
+    timestamp VARCHAR(30) ,
     latitude TEXT,
     longitude TEXT,
     elevation TEXT,
@@ -19,7 +19,8 @@ CREATE TABLE IF NOT EXISTS gps_data (
     battery TEXT,
     annotation TEXT,
     distance_meters TEXT,
-    elapsed_time_seconds TEXT
+    elapsed_time_seconds TEXT,
+    CONSTRAINT pk PRIMARY KEY (boothid,timestamp)
 );
 
 /*CREATE TABLE IF NOT EXISTS backup_data (

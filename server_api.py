@@ -4,6 +4,8 @@ import sqlite3
 import argparse
 import os
 import json
+import mysql.connector
+from mysql.connector import errorcode
 
 app = Flask(__name__)
 logic=Server(app)
@@ -17,29 +19,63 @@ app.config['address'] = {
     6:('http://127.0.0.1', '9866') 
 }
 
-def init_db():
-    dbname = f"database_{app.config['id']}.db"
-    try:
-        connection = sqlite3.connect(dbname)
 
-        with open('dataset_gps.sql') as f:
-            connection.executescript(f.read())
-            
-        connection.commit()
-        connection.close()
-    except:
-        os.remove(dbname)
-        init_db()
+#def init_db():
+#    dbname = f"database_{app.config['id']}.db"
+ #   try:
+#        connection = sqlite3.connect(dbname)
+#
+#        with open('dataset_gps.sql') as f:
+#            connection.executescript(f.read())
+#
+#        connection.commit()
+#        connection.close()
+ #   except:
+ #       os.remove(dbname)
+ #       init_db()
+
+def init_db():
+    dbname = f"database_{app.config['id']}"
+    try:
+        mydbconnection = mysql.connector.connect(
+            host="127.0.0.1",
+            port="3306",
+            user="root",
+            password="123"
+        )
+        # Create a new database if it does not exist
+        mycursor = mydbconnection.cursor()
+        mycursor.execute("CREATE DATABASE IF NOT EXISTS "+dbname)
+        mycursor.execute("USE " + dbname)
+        mydbconnection.commit()
+        mydbconnection.close()
+
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            print("Something is wrong with your user name or password")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            print("Database does not exist")
+        else:
+            print(err)
+
 
 def check_offline():
     if logic.offline:
         raise TypeError()
     
 def get_db_connection():
-    dbname = f"database_{app.config['id']}.db"
-    conn = sqlite3.connect(dbname)
-    conn.row_factory = sqlite3.Row
-    return conn
+    #conn = sqlite3.connect(dbname)
+    #conn.row_factory = sqlite3.Row
+    dbname = f"database_{app.config['id']}"
+    mydbconnection = mysql.connector.connect(
+        host="127.0.0.1",
+        port="3306",
+        user="root",
+        password="123",
+        database=dbname
+    )
+
+    return mydbconnection
 
 def insert_dummy_data():
     conn=get_db_connection()

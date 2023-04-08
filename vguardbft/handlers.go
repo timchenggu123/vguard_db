@@ -95,7 +95,7 @@ func createDB(id string) {
 }
 
 func takingInitRoles(proposer ServerId) {
-	createDB(strconv.Itoa(int(ServerId(ServerID))))
+	//createDB(strconv.Itoa(int(ServerId(ServerID))))
 	var err error
 	//sqliteDatabase, err = sql.Open("sqlite3", "../database_"+strconv.Itoa(int(ServerId(ServerID)))+".db") // Open the created SQLite File
 	dbName := "database_" + strconv.Itoa(int(ServerId(ServerID)))
