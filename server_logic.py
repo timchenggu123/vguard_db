@@ -11,9 +11,11 @@ class Server():
         self.is_backup=False
         self.backup_list={
             "active":[],
-            "obsolete":[]
+            "obsolete":[],
+            "id": 0
         }
         self.offline=False
+        self.backup_list_id = 0
          
     @property
     def proposer_id(self):
@@ -103,6 +105,8 @@ class Server():
     
     
     def on_requested_delete_obsolete(self, backup_list, conn):
+        if self.backup_list['id'] >= backup_list['id']:
+            raise ValueError()
         self.backup_list=backup_list
         self.is_backup=False
         self.delete_backup(conn)
@@ -134,6 +138,8 @@ class Server():
             return None, self.backup_list['active']
     
     def on_requested_update_backup_list(self, backup_list):
+        if self.backup_list['id'] >= backup_list['id']:
+            raise ValueError()
         '''
         when receiving a request to update backup list
         '''
@@ -228,6 +234,8 @@ class Server():
         self.backup_list['obsolete'] = [x for x in self.backup_list['obsolete'] if x not in chosen]
         self.backup_list['obsolete'] = list(dict.fromkeys(self.backup_list['obsolete']))
         self.backup_list['active'] = chosen
+        self.backup_list['id'] = self.backup_list_id
+        self.backup_list_id += 1
     
     def request_delete_obsolete(self):
         '''
