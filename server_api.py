@@ -163,6 +163,13 @@ def set_online():
     logic.offline=False
     return jsonify({}), 200
 
+@app.route('/read_latest')
+def read_latest():
+    conn = get_db_connection()
+    data = logic._db_read_latest_timestamp(conn, 'gps_data')
+    conn.close()
+    return jsonify(data), 200
+
 if __name__ == '__main__':        
 
     # Create the argument parser
