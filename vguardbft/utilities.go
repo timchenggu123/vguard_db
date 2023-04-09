@@ -77,8 +77,10 @@ func dataTxGenerator(leng int) {
 		q := make(chan *Proposal, MaxQueue)
 
 		for i := int64(0); i < MsgLoad; i++ {
+			timestamp := time.Now().UnixMicro()
+			gpsData.Timestamp = string(timestamp)
 			q <- &Proposal{
-				Timestamp:   time.Now().UnixMicro(),
+				Timestamp:   timestamp,
 				Transaction: gpsData,
 			}
 		}
