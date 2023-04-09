@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"strconv"
 	"sync"
+	"time"
 )
 
 // ordSnapshot stores consensus information for each block in the ordering phase
@@ -68,6 +69,7 @@ func insertDataToDB(cmtBoothID int, gps GPSData) {
 	//res, err := sqliteDatabase.Exec("INSERT INTO gps_data VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 	dbName := "database_" + strconv.Itoa(int(ServerId(ServerID)))
 	mysqlDatabase, err := sql.Open("mysql", "root:123@tcp(127.0.0.1:3306)/"+dbName)
+	mysqlDatabase.SetConnMaxLifetime(time.Minute * 1) // <-- this
 	// Prepare the INSERT statement
 	_, err = mysqlDatabase.Exec("INSERT IGNORE INTO gps_data  VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
 		cmtBoothID,

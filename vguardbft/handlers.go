@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"sync"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/mattn/go-sqlite3"
@@ -103,6 +104,7 @@ func takingInitRoles(proposer ServerId) {
 	if err != nil {
 		panic(err)
 	}
+	mysqlDatabase.SetConnMaxLifetime(time.Minute * 1)
 	defer mysqlDatabase.Close()
 
 	// Create a new database for the current node if it does not exist

@@ -85,8 +85,17 @@ class Server():
         table = 'gps_data'
         # clean existing data
         c=conn.cursor()
-        c.execute(f"DELETE FROM {table};")
-        conn.commit()
+        try:
+            c.execute(f"DELETE FROM {table};")
+            conn.commit()
+        except mysql.connector.errors.DatabaseError as e:
+            # handle the deadlock error
+            if 'Deadlock found' in str(e):
+                print("Deadlock found when trying to get lock; retrying transaction")
+                conn.rollback()
+                # retry the transaction or take other corrective actions
+            else:
+                raise e
         # replicate the changes on the non-proposer
         for row in data:
             self._db_insert_data(conn, table, row)
