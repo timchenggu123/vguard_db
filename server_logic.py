@@ -190,6 +190,7 @@ class Server():
             status = self.broadcast_backups_to_booth(chosen, participants)
             self.update_backup_list(chosen)
             self.request_delete_obsolete()
+            print(f"The chosen is {chosen}")
 
     def choose_random_backups(self,participants, conn):
         chosen = random.choices(participants, k=self.k_backups)
