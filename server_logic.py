@@ -193,7 +193,7 @@ class Server():
             print(f"The chosen is {chosen}")
 
     def choose_random_backups(self,participants, conn):
-        chosen = random.choices(participants, k=self.k_backups)
+        chosen = random.sample(participants, k=self.k_backups)
         for c in chosen:
             response = self.request_to_be_backups(c, conn)
             if response.status_code != 200:
