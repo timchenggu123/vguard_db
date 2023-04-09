@@ -239,7 +239,9 @@ class Server():
                 try:
                     self.backup_list['obsolete'].remove(i)
                 except ValueError:
-                    print("The requested obsolete is not in the backup list")
+                    print(f"The requested obsolete {i} is not in the backup list")
+                    print(obsoletes)
+                    print(self.backup_list['obsolete'])
                     continue
         return True
         
