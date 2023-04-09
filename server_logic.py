@@ -71,6 +71,15 @@ class Server():
             out.append([i for i in d])
         return out
 
+    def _db_read_latest_timestamp(self, conn,table):
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(f"SELECT * FROM {table} ORDER BY timstamp DESC LIMIT 1")
+        # fetch all the rows and store them in a list of dictionaries
+        rows = cursor.fetchall()
+        for d in rows:
+            out = d['timestamp']
+        return out
+
     ##======== Non proposer logic===========
     def on_chosen_as_backup(self, data, conn):
         
