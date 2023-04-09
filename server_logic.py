@@ -189,6 +189,7 @@ class Server():
                 continue
             status = self.broadcast_backups_to_booth(chosen, participants)
             self.update_backup_list(chosen)
+            print(f"The backup list is {self.backup_list['obsolete']}")
             self.request_delete_obsolete()
             print(f"The chosen is {chosen}")
 
