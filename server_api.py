@@ -196,4 +196,4 @@ if __name__ == '__main__':
     init_db()
     # insert_dummy_data()
 
-    app.run(debug=True,port=args.port, hosts = '0.0.0.0')
+    app.run(debug=True,port=args.port, host = '0.0.0.0')
