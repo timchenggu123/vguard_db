@@ -164,7 +164,7 @@ def set_online():
 @app.route('/read_latest')
 def read_latest():
     table = 'gps_data'
-    query = f"SELECT * FROM {table} ORDER BY timstamp DESC LIMIT 1"
+    query = f"SELECT * FROM {table} ORDER BY timestamp DESC LIMIT 1"
     data =logic.read_data(query)
     return jsonify({'data':data}), 200
 
