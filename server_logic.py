@@ -73,7 +73,7 @@ class Server():
 
     def _db_read_latest_timestamp(self, conn,table):
         cursor = conn.cursor(dictionary=True)
-        cursor.execute(f"SELECT * FROM {table} ORDER BY timstamp DESC LIMIT 1")
+        cursor.execute(f"SELECT * FROM {table} ORDER BY timestamp DESC LIMIT 1")
         # fetch all the rows and store them in a list of dictionaries
         rows = cursor.fetchall()
         for d in rows:
