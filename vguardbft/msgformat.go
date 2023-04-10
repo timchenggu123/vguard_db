@@ -6,7 +6,7 @@ package main
 //
 
 type GPSData struct {
-	Timestamp            string `csv:"timestamp"`
+	Timestamp            int64  `csv:"timestamp"`
 	Latitude             string `csv:"latitude"`
 	Longitude            string `csv:"longitude"`
 	Elevation            string `csv:"elevation"`

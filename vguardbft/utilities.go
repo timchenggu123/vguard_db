@@ -21,7 +21,7 @@ func mockRandomBytes(length int, charset string) []byte {
 
 func createGPSStruct(line []string) GPSData {
 	return GPSData{
-		Timestamp:            line[0],
+		Timestamp:            time.Now().UnixMicro(),
 		Latitude:             line[1],
 		Longitude:            line[2],
 		Elevation:            line[3],
@@ -77,10 +77,10 @@ func dataTxGenerator(leng int) {
 		q := make(chan *Proposal, MaxQueue)
 
 		for i := int64(0); i < MsgLoad; i++ {
-			timestamp := time.Now().UnixMicro()
-			gpsData.Timestamp = string(timestamp)
+			//timestamp := time.Now().UnixMicro()
+			//gpsData.Timestamp = string(timestamp)
 			q <- &Proposal{
-				Timestamp:   timestamp,
+				Timestamp:   time.Now().UnixMicro(),
 				Transaction: gpsData,
 			}
 		}
