@@ -243,8 +243,9 @@ class Server():
         self.backup_list['obsolete'] = [x for x in self.backup_list['obsolete'] if x not in chosen]
         self.backup_list['obsolete'] = list(dict.fromkeys(self.backup_list['obsolete']))
         self.backup_list['active'] = chosen
-        self.backup_list['id'] = self.backup_list_id
-        self.backup_list_id += 1
+        if self.is_proposer:
+            self.backup_list['id'] = self.backup_list_id
+            self.backup_list_id += 1
     
     def request_delete_obsolete(self):
         '''
