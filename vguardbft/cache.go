@@ -70,11 +70,11 @@ func insertDataToDB(cmtBoothID int, gps GPSData) {
 	dbName := "database_" + strconv.Itoa(int(ServerId(ServerID)))
 	mysqlDatabase, err := sql.Open("mysql", "root:123@tcp(127.0.0.1:3306)/"+dbName)
 	mysqlDatabase.SetConnMaxLifetime(time.Minute * 1) // <-- this
-	timestamp := time.Now().UnixMicro()
+	//timestamp := time.Now().UnixMicro()
 	// Prepare the INSERT statement
 	_, err = mysqlDatabase.Exec("INSERT IGNORE INTO gps_data  VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
 		cmtBoothID,
-		string(timestamp),
+		gps.Timestamp,
 		gps.Latitude,
 		gps.Longitude,
 		gps.Elevation,
@@ -114,6 +114,7 @@ func storeVgTx(consInstID int) {
 		for _, entries := range chunk {
 			for _, e := range entries {
 				//log.Infof("ts: %v; tx: %v", e.TimeStamp, hex.EncodeToString(e.Tx))
+				e.Tx.Timestamp = e.TimeStamp
 				log.Infof("ts: %v; tx: %v", e.TimeStamp, e.Tx)
 
 				if 0 == ServerId(ServerID) {
