@@ -11,9 +11,9 @@ while True:
     if code != 200:
         print(f"Proposer not responding. Test terminated. average latency: {sum(diffs)/len(diffs)}")
     ts = res.json()
-    ts = float(ts) * 1e6
+    ts = float(ts)
     if ts > latest:
         latest = ts
-        now = time.time()
+        now = time.time() * 1e6
         diffs.append(now - ts)
         print(diffs[-1])
