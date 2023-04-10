@@ -97,7 +97,6 @@ def read_data():
 
 @app.route('/choose_backup', methods=['POST'])
 def choose_backup():
-    check_offline()
     conn = get_db_connection()
     data = request.json
     res = logic.on_chosen_as_backup(data, conn)
@@ -109,7 +108,6 @@ def choose_backup():
 
 @app.route('/end_of_booth', methods=['Get'])
 def end_of_booth():
-    check_offline()
     conn = get_db_connection()
     if not app.config['is_proposer']:
        return jsonify({'status': 'Failed: end point needs to belong to a proposer'})
@@ -165,10 +163,10 @@ def set_online():
 
 @app.route('/read_latest')
 def read_latest():
-    conn = get_db_connection()
-    data = logic._db_read_latest_timestamp(conn, 'gps_data')
-    conn.close()
-    return jsonify(data), 200
+    table = 'gps_data'
+    query = f"SELECT * FROM {table} ORDER BY timstamp DESC LIMIT 1"
+    data =logic.read_data(query)
+    return jsonify({'data':data}), 200
 
 if __name__ == '__main__':        
 
