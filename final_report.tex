@@ -1,0 +1,95 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Template for USENIX papers.
+%
+% History:
+%
+% - TEMPLATE for Usenix papers, specifically to meet requirements of
+%   USENIX '05. originally a template for producing IEEE-format
+%   articles using LaTeX. written by Matthew Ward, CS Department,
+%   Worcester Polytechnic Institute. adapted by David Beazley for his
+%   excellent SWIG paper in Proceedings, Tcl 96. turned into a
+%   smartass generic template by De Clarke, with thanks to both the
+%   above pioneers. Use at your own risk. Complaints to /dev/null.
+%   Make it two column with no page numbering, default is 10 point.
+%
+% - Munged by Fred Douglis <douglis@research.att.com> 10/97 to
+%   separate the .sty file from the LaTeX source template, so that
+%   people can more easily include the .sty file into an existing
+%   document. Also changed to more closely follow the style guidelines
+%   as represented by the Word sample file.
+%
+% - Note that since 2010, USENIX does not require endnotes. If you
+%   want foot of page notes, don't include the endnotes package in the
+%   usepackage command, below.
+% - This version uses the latex2e styles, not the very ancient 2.09
+%   stuff.
+%
+% - Updated July 2018: Text block size changed from 6.5" to 7"
+%
+% - Updated Dec 2018 for ATC'19:
+%
+%   * Revised text to pass HotCRP's auto-formatting check, with
+%     hotcrp.settings.submission_form.body_font_size=10pt, and
+%     hotcrp.settings.submission_form.line_height=12pt
+%
+%   * Switched from \endnote-s to \footnote-s to match Usenix's policy.
+%
+%   * \section* => \begin{abstract} ... \end{abstract}
+%
+%   * Make template self-contained in terms of bibtex entires, to allow
+%     this file to be compiled. (And changing refs style to 'plain'.)
+%
+%   * Make template self-contained in terms of figures, to
+%     allow this file to be compiled. 
+%
+%   * Added packages for hyperref, embedding fonts, and improving
+%     appearance.
+%   
+%   * Removed outdated text.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[letterpaper,twocolumn,10pt]{article}
+\usepackage{usenix-2020-09}
+
+% to be able to draw some self-contained figs
+\usepackage{tikz}
+\usepackage{amsmath}
+
+% inlined bib file
+\usepackage{filecontents}
+
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{document}
+%-------------------------------------------------------------------------------
+
+
+% make title bold and 14 pt font (Latex default is non-bold, 16 pt)
+\title{VGuardDB: An Extension of VGuard for Efficiently Storing and Accessing Data from V2X Networks}
+
+\maketitle
+
+\begin{abstract}
+VGuard proposes a new permissioned blockchain that achieves consensus for vehicular data under changing memberships. However, VGuard only produces chained consensus results of data entries but does not store them in a database but only on a log file, making it challenging to retrieve data from the blockchain for analysis and decision-making. Additionally, the VGuard paper has not specified the structure of the supported data entries or the use cases that generate them. To address these issuses, we introdudce VGuardDB, which adds a database layer to VGuard, where each vehicle has a distributed database to store data, provide access to the agreed data through the read capabilities of the database layer and define specific data structures. As such, the proposed enhancements to the VGuard blockchain system will enable an efficient and reliable data storage and retrieval, improving the usability of the system and enhancing its practical application.
+\end{abstract}
+\section{Introduction}
+V2X networks are an essential component of intelligent transportation systems, enabling vehicles to communicate with each other and the surrounding infrastructure. However, storing and accessing the generated data in a structured and organized way can be challenging. To address this issue, VGuardDB has been developed as an extension of VGuard, a permissioned blockchain designed for achieving consensus under dynamic memberships in V2X networks.
+
+VGuardDB creates a storage layer upon VGuard, allowing for the generated data to be available to all users in a structured and organized way, implementing the necessary read functionalities to access the stored data. Furthermore, VGuardDB extends VGuard to support messages from on-vehicle GPS data sensors, providing a more meaningful and efficient way to store and retrieve data from V2X networks.
+
+This paper presents VGuardDB, a database system for V2X networks that improves the efficiency and accessibility of the generated data. The project employs SQLite, a widely used database management system known for its reliability and efficiency. The extension of VGuard to support messages from on-vehicle GPS data sensors, implementation of read functionalities, and storage layer make VGuardDB an essential tool for researchers and developers in the field of intelligent transportation systems.
+
+The rest of the paper is organized as follows. Section 2 provides an overview of related work in the field. Section 3 describes the architecture and design of VGuardDB, including the extension of VGuard, the storage layer, and the use of SQLite. Section 4 presents the experimental results and evaluation of VGuardDB's performance. Finally, Section 5 concludes the paper and outlines future research directions.
+\section{Related Work}
+There have been some existing works that aim to create a fusion between blockchain and distributed databases in order to combine the advantages of both worlds. BlockchainDB[1] proposes a novel architecture that uses a scalable and efficient database as a storage layer and a blockchain as an append-only log that records the history of data modifications. Another example is Blockchain Relational Database (BRD)[2], a novel architecture for a blockchain relational database that leverages the rich features of a replicated relational database and extends them with blockchain properties such as immutability, provenance, and consensus.
+Regarding the applicability of V2X blockchain technology, some research works have analyzed and categorized some real use-case scenarios. For example,  [3] presents a taxonomy of design use cases and system architectures for blockchain applications in V2X communication and discusses how blockchains can be used to record and distribute data such as software updates, driver behaviors, and accident reports among different stakeholders. 
+
+\section{Design and implementation}
+\section{Evaluation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%  LocalWords:  endnotes includegraphics fread ptr nobj noindent
+%%  LocalWords:  pdflatex acks
