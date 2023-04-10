@@ -114,7 +114,7 @@ class Server():
     
     
     def on_requested_delete_obsolete(self, backup_list, conn):
-        if self.backup_list['id'] >= backup_list['id']:
+        if self.backup_list['id'] > backup_list['id']:
             raise ValueError()
         self.backup_list=backup_list
         self.is_backup=False
