@@ -70,10 +70,11 @@ func insertDataToDB(cmtBoothID int, gps GPSData) {
 	dbName := "database_" + strconv.Itoa(int(ServerId(ServerID)))
 	mysqlDatabase, err := sql.Open("mysql", "root:123@tcp(127.0.0.1:3306)/"+dbName)
 	mysqlDatabase.SetConnMaxLifetime(time.Minute * 1) // <-- this
+	timestamp := time.Now().UnixMicro()
 	// Prepare the INSERT statement
 	_, err = mysqlDatabase.Exec("INSERT IGNORE INTO gps_data  VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
 		cmtBoothID,
-		gps.Timestamp,
+		string(timestamp),
 		gps.Latitude,
 		gps.Longitude,
 		gps.Elevation,
@@ -136,6 +137,7 @@ func storeVgTx(consInstID int) {
 					//print(res)
 
 					// Send the HTTP request
+
 					url := "http://127.0.0.1:9860/end_of_booth"
 					req, err := http.NewRequest("GET", url, bytes.NewBuffer(jsonPayload))
 					if err != nil {
