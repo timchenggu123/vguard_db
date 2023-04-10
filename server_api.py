@@ -166,7 +166,7 @@ def read_latest():
     table = 'gps_data'
     query = f"SELECT * FROM {table} ORDER BY timestamp DESC LIMIT 1"
     data =logic.read_data(query)
-    return jsonify({'data':data}), 200
+    return jsonify(query), 200
 
 if __name__ == '__main__':        
 
