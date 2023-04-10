@@ -85,7 +85,7 @@ class Server():
         
         if self.is_proposer:
             raise TypeError('Proposer cannot be chosen as backup')
-        
+        self.delete_backup(conn)
         self.is_backup=True
         return self.make_replica(data, conn)
         
