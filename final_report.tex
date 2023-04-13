@@ -60,7 +60,7 @@
 
 % inlined bib file
 \usepackage{filecontents}
-
+\newcommand{\para}[1]{\vspace{0.4em}\noindent {\bf #1}}
 %-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 \begin{document}
@@ -91,14 +91,33 @@ To fill in this missing component, we introduce VGuardDB, which creates and addi
 The rest of the paper is organized as follows. Section 2 provides an overview of related work in the field. Section 3 describes the architecture and design of VGuardDB, including the extension of VGuard, the storage layer, and the use of MySQL. Section 4 presents the experimental results and evaluation of VGuardDB's performance. Finally, Section 5 concludes the paper and outlines future research directions.
 
 \section{Related Work}
-There have been some existing works that aim to create a fusion between blockchain and distributed databases in order to combine the advantages of both worlds. BlockchainDB[1] proposes a novel architecture that uses a scalable and efficient database as a storage layer and a blockchain as an append-only log that records the history of data modifications. Another example is Blockchain Relational Database (BRD)[2], a novel architecture for a blockchain relational database that leverages the rich features of a replicated relational database and extends them with blockchain properties such as immutability, provenance, and consensus.
-Regarding the applicability of V2X blockchain technology, some research works have analyzed and categorized some real use-case scenarios. For example,  [3] presents a taxonomy of design use cases and system architectures for blockchain applications in V2X communication and discusses how blockchains can be used to record and distribute data such as software updates, driver behaviors, and accident reports among different stakeholders. 
+There have been some existing works that aim to create a fusion between blockchain and distributed databases in order to combine the advantages of both worlds. BlockchainDB[] proposes a novel architecture that uses a scalable and efficient database as a storage layer and a blockchain as an append-only log that records the history of data modifications. Another example is Blockchain Relational Database (BRD)[], a novel architecture for a blockchain relational database that leverages the rich features of a replicated relational database and extends them with blockchain properties such as immutability, provenance, and consensus.
+Regarding the applicability of V2X blockchain technology, some research works have analyzed and categorized some real use-case scenarios. For example,  [] presents a taxonomy of design use cases and system architectures for blockchain applications in V2X communication and discusses how blockchains can be used to record and distribute data such as software updates, driver behaviors, and accident reports among different stakeholders. 
 
+\section{Assumptions}
+Due to unique nature of V2X networks, VGuardDB makes the following assumptions:
+
+\begin{itemize}
+    \item All vehicles are (eventually) reachable through cellular (or other) network via their unique identification (e.g. public key). (Note this is different from the direct vehicle-to-vehicle connection in the booth).
+    \item 
+    Vehicle to vehicle connections is available for vehicles in the same booth.
+    \item
+    At most N replica unavailable simultaneously at any given time, where for $k$ backup databases, $N \leq k$.
+    \item
+    All vehicles are willing host a backup databse as long as there is reasonable fairness in the selection process.
+
+\end{itemize}
+\begin{figure*}[t]
+    \centering
+    \includegraphics[width=\textwidth]{img/architecture.png}
+    \caption{The overall architecture of VGuardDB implementation.}
+    \label{fig:architecture}
+\end{figure*}
 \section{Design}
 The core logic of VGuardDB can be divided to 3 independent phases, which are the backup-replication phase, the data-release phase, and the data-read phase. The backup-replication phase is responsible for making backups of the data on the chain. The data-release phase is responsible for releasing data from obsolete replicates. The data-read phase is responsible for reading the data from the database. The overall workflow is illustrated in figure \ref{fig:workflow}. The following subsections describe the design of each phase in detail.
 
-\subsection{Backup-Replication Phase}
-The backup-replication phase is responsible for making backup database on the chain. The backup-replication phase is triggered when at the end of the commit consensus phase in VGuard. Upon which, VGuard sends a request to VGuardDB to make backups of the data on the chain. VGuardDB then randomly selects a number of vehicles from the current participants in the commit consensus phase, and sends a request to each of them to make a backup of the data on the chain. If the request is successful, VGuardDB then sends a request to the proposer to broadcast the information of the new backups to the vehicles that participated the commit consensus booth. The vehicles then update their local backup list with the new backups.
+\para{Backup-Replication Phase}
+The backup-replication phase is responsible for making backup database on the chain. The backup-replication phase is triggered when at the end of the commit consensus phase in VGuard. Upon which, VGuard sends a request to VGuardDB to make backups of the data on the chain. VGuardDB then randomly selects a $k$ vehicles from the current participants in the commit consensus phase, and sends a request to each of them to make a backup of the data on the chain. If the request is successful, VGuardDB then sends a request to the proposer to broadcast the information of the new backups to the vehicles that participated the commit consensus booth. The vehicles then update their local backup list with the new backups.
 
 The following pseudocode illustrates the logic of the \texttt{backup\_replication} function:
 
@@ -120,9 +139,13 @@ The following pseudocode illustrates the logic of the \texttt{backup\_replicatio
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{Data-Release Phase}
+\para{Data-Release Phase}. In order to save storage space on vehicles, VGuardDB only requires a configurable number of $k$ vehicles to store data on the chain at any given point in time. The data-release phase is responsible for releasing data from obsolete replicates. The data-release phase is triggered when a vehicle receives a request to delete obsolete backups. Upon which, the vehicle deletes the data from its local databse and sends and updates its own backup list with the news backup inofrmation.
 
-\subsection{Data-Read Phase}
+\para{Data-Read Phase}
+The data-read phase is responsible for reading the data from the database. The data-read phase is triggered when a vehicle in the chain receives a requests for triggering the data-read process. Upon which, the vehicle act as a client and sends a read GET request to the VGuard proposer instance. This is because the proposer will always have most recent version of data. Under no failures, the proposer would simply receive the request and returns the requested data to the client vehicle. 
+
+However, in where case that the proposer fails, the client vehicle will recieve the failure response and sends the data request to one of the backup vehicles according to its local backup list. It is worth noting that the client vehicle would only have a copy of the most rencent backuplist if it has participated in the latest booth. However, this may not be the case, hence its local backup list may be outdated. In this case, the client vehicle would send the data request to one of the \textit{obsolete backup} vehicles. There are two scenarios when this happens: 1) the \textit{obsolete backup} has been informed that it is obsolete through the data-release phase, or; 2) It is oblivious that is is now obsolete. In the first case, the \textit{obsolete backup} would return a failure response and forward a copy of its own backup list to the client vehicle. The client vehicle would then update its own backup list with the new backup list and send the data request to one of the new backup vehicles. In the second case, the \textit{obsolete backup} would return the requested data to the client vehicle. Note that this means that the data may not necessarily contain the newest update. This can be seen as a trade-off between data freshness and storage space.
+
 \section{Implementation}
 We design VGuardDB in a way that it can be easily integrated into existing VGuard implementations in a modular fashion. The architecture of VGuardDB is shown in Figure \ref{fig:architecture}. The VGuardDB architecture consists of three main components: A Python Flask-based API, A main logic layer, and a MySQL-based data storage layer. The API layer is responsible for receiving requests from the vehicles and forwarding them to the main logic layer. The main logic layer is responsible for the main logic of the system, including making database replicas as well as handling data-read functionality. The storage layer is responsible for storing the data and is shared with VGuard.
 
