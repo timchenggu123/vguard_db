@@ -13,7 +13,7 @@ diffs = []
 #         print(f"Proposer not responding. Waiting...")
 #         break
     
-for i in range(10):
+for i in range(1):
     while True:
         sleep(0.1)
         try:
@@ -24,7 +24,7 @@ for i in range(10):
         ts = float(ts)
         if ts > latest:
             latest = ts
-            now = time.time() * 1e6
+            now = time.time()
             diffs.append(now - ts)
             print(diffs[-1])
             break
