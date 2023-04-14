@@ -12,7 +12,18 @@ diffs = []
 #     if code == 200:
 #         print(f"Proposer not responding. Waiting...")
 #         break
-    
+
+while True:
+        sleep(0.1)
+        try:
+            res = requests.get(f'{proposer}/read_latest')
+            ts = res.json()
+            latest = float(ts)
+            break
+        except:
+            continue
+        
+        
 for i in range(1):
     while True:
         sleep(0.1)
