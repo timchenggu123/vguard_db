@@ -2,7 +2,7 @@ import requests
 import time
 from time import sleep
 
-proposer = 'http://127.0.0.1:9860'
+proposer = 'http://192.168.41.224:9860'
 
 latest = -1
 diffs = []
