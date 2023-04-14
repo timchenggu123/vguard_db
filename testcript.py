@@ -14,10 +14,13 @@ diffs = []
 #         break
     
 for i in range(10):
-    res = requests.get(f'{proposer}/read_latest')
     while True:
         sleep(0.1)
-        ts = res.json()
+        try:
+            res = requests.get(f'{proposer}/read_latest')
+            ts = res.json()
+        except:
+            continue
         ts = float(ts)
         if ts > latest:
             latest = ts
