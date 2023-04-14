@@ -2,7 +2,7 @@ import requests
 import time
 from time import sleep
 
-proposer = 'http://127.0.0.1:9860'
+proposer = 'http://192.168.41.224:9860'
 
 latest = -1
 diffs = []
@@ -12,16 +12,29 @@ diffs = []
 #     if code == 200:
 #         print(f"Proposer not responding. Waiting...")
 #         break
-    
-for i in range(10):
-    res = requests.get(f'{proposer}/read_latest')
+
+while True:
+        sleep(0.1)
+        try:
+            res = requests.get(f'{proposer}/read_latest')
+            ts = res.json()
+            latest = float(ts)
+            break
+        except:
+            continue
+        
+for i in range(1):
     while True:
         sleep(0.1)
-        ts = res.json()
+        try:
+            res = requests.get(f'{proposer}/read_latest')
+            ts = res.json()
+        except:
+            continue
         ts = float(ts)
         if ts > latest:
             latest = ts
-            now = time.time() * 1e6
+            now = time.time()
             diffs.append(now - ts)
             print(diffs[-1])
             break

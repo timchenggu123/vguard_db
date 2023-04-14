@@ -158,11 +158,11 @@ class Server():
         '''
         read data
         '''
-        response = self.request_data(query, [self.proposer_id]) #query is some SQL query
-        if response.status_code == 200:
-            data = response.json()['data']
-            if data is not None:
-                return data
+        # response = self.request_data(query, [self.proposer_id]) #query is some SQL query
+        # if response.status_code == 200:
+        #     data = response.json()['data']
+        #     if data is not None:
+        #         return data
             
         backup_ids = self.backup_list['active']    
         while True:

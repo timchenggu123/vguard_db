@@ -3,8 +3,8 @@
 ./vginstance -id=$1 -r=$2 \
 -b=1 \
 -boo=4 \
--c=6 \
--cfp="./config/cluster_localhost.conf" \
+-c=11 \
+-cfp="./config/cluster_10.conf" \
 -ci=500 \
 -cw=10 \
 -d=0 \
